@@ -1,18 +1,29 @@
-import openai
+from openai import OpenAI
 from dotenv import load_dotenv
 import os
+import base64
 
 load_dotenv()
 
-openai.api_key = os.environ["API_KEY"]
-
-response = openai.Image.create_edit(
-  image=open("images/img-dev.png", "rb"),
-  mask=open("images/img-dev-mask.png", "rb"),
-  prompt="a developer working on laptop near beach full frame with boat showing on screen",
-  n=1,
-  size="1024x1024"
+client = OpenAI(
+    api_key=os.environ["API_KEY"]
 )
-image_url = response['data'][0]['url']
 
-print(image_url)
+with open("images/img-dev.png", "rb") as image_file, \
+     open("images/img-dev-mask.png", "rb") as mask_file:
+
+    response = client.images.edit(
+        model="gpt-image-1",
+        image=image_file,
+        mask=mask_file,
+        prompt="A developer working on a laptop near a beach, full frame, with a boat visible on the screen.",
+        size="1024x1024"
+    )
+
+image_data = base64.b64decode(response.data[0].b64_json)
+
+with open("edited_developer.png", "wb") as file:
+    file.write(image_data)
+
+print("Image edited successfully!")
+print("Saved as: edited_developer.png")
